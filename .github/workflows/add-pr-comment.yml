@@ -15,7 +15,7 @@ jobs:
     if: >
       (github.event_name == 'pull_request' && 
        github.event.pull_request.draft == true && 
-       github.event.pull_request.base.ref == 'feature_a') ||
+       github.event.pull_request.base.ref == 'main') ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
