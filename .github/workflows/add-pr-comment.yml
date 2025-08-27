@@ -3,10 +3,20 @@ name: Add checklist comment to draft PRs
 on:
   pull_request:
     types: [opened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'プルリクエスト番号'
+        required: true
+        type: number
 
 jobs:
   add-comment:
-    if: github.event.pull_request.draft == true && github.event.pull_request.base.ref == 'feature_a'
+    if: >
+      (github.event_name == 'pull_request' && 
+       github.event.pull_request.draft == true && 
+       github.event.pull_request.base.ref == 'feature_a') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Add checklist comment
@@ -14,7 +24,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prNumber = context.payload.pull_request.number;
+            // プルリクエスト番号を取得（手動実行時は入力値、自動実行時はイベントから）
+            const prNumber = github.context.eventName === 'workflow_dispatch' 
+              ? github.context.payload.inputs.pr_number
+              : context.payload.pull_request.number;
             const repo = context.repo;
             const body = "レビューの効率化および手戻り抑止のために、作成者は以下をセルフチェックしてください\n\n" +
               "### 概要に以下を記載していること\n" +
