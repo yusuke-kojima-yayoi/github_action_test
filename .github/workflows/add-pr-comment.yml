@@ -25,8 +25,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             // プルリクエスト番号を取得（手動実行時は入力値、自動実行時はイベントから）
-            const prNumber = github.context.eventName === 'workflow_dispatch' 
-              ? github.context.payload.inputs.pr_number
+            const prNumber = context.eventName === 'workflow_dispatch' 
+              ? context.payload.inputs.pr_number
               : context.payload.pull_request.number;
             const repo = context.repo;
             const body = "レビューの効率化および手戻り抑止のために、作成者は以下をセルフチェックしてください\n\n" +
