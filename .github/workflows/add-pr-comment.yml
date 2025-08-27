@@ -1,0 +1,39 @@
+name: Add checklist comment to draft PRs
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  add-comment:
+    if: github.event.pull_request.draft == true && github.event.pull_request.base.ref == 'feature_a'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add checklist comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const repo = context.repo;
+            const body = `
+レビューの効率化および手戻り抑止のために、作成者は以下をセルフチェックしてください
+
+### 概要に以下を記載していること
+- [ ] 動作確認をどんなパターンで行ったのかが書かれているか
+- [ ] UI のデザインを変更した場合はキャプチャ画像、UI 操作を変更した場合は GIF 動画を添付しているか
+
+### 変更内容が以下を満たしていること
+- [ ] 既存のコンポーネントを変更した場合、その変更によるデグレードがないことを確認したか
+- [ ] 他の類似の実装箇所と一貫した実装方法になっているか(一貫性のある実装か AI で確認可能)
+- [ ] バックエンドサービスのコードを追加・変更した時は、テストコードも作成したか
+- [ ] テストコードに作成したテストケースをどの観点で作成したのか、その妥当性を説明できるか。異常系のテストケースを作成したか
+- [ ] フロントで処理に失敗したときに、その失敗の結果をユーザに通知するような実装になっているか
+            `;
+
+            await github.rest.issues.createComment({
+              owner: repo.owner,
+              repo: repo.repo,
+              issue_number: prNumber,
+              body,
+            });
