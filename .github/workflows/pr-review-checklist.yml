@@ -1,17 +1,16 @@
-# 特定ブランチへのプルリクエスト作成時に、レビューチェックリストを自動追加するワークフロー
+# 特定ブランチへのプルリクエスト作成時に、レビューチェックリストを自動追加するワークフロー(Bチーム向け)
 name: Auto add review checklist to PRs
 
-# プルリクエストが作成されたとき、または ready_for_review になったときに実行
+# プルリクエストが作成されたときに実行（opened のみ）
 on:
   pull_request:
-    types: [opened, ready_for_review]
+    types: [opened]
+    # 対象ブランチのみで起動
+    branches:
+      - main
 
 jobs:
   add-comment:
-    # 特定ブランチへのドラフトプルリクエストの場合のみ実行
-    if: >
-      github.event.pull_request.draft == true && 
-      github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     # プルリクエストにコメントを投稿するための権限設定
     permissions:
@@ -27,7 +26,7 @@ jobs:
             // プルリクエストの情報を取得
             const prNumber = context.payload.pull_request.number;
             const repo = context.repo;
-            
+
             // レビューチェックリストのテンプレート
             const body = "レビューの効率化および手戻り抑止のために、作成者は以下をセルフチェックしてください\n\n" +
               "### 概要に以下を記載していること\n" +
