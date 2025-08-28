@@ -1,37 +1,33 @@
-name: Add checklist comment to draft PRs
+# 特定ブランチへのプルリクエスト作成時に、レビューチェックリストを自動追加するワークフロー(Bチーム向け)
+name: Auto add review checklist to PRs
 
+# プルリクエストが作成されたときに実行（opened のみ）
 on:
   pull_request:
-    types: [opened, ready_for_review]
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'プルリクエスト番号'
-        required: true
-        type: number
+    types: [opened]
+    # 対象ブランチのみで起動
+    branches:
+      - main
 
 jobs:
   add-comment:
-    if: >
-      (github.event_name == 'pull_request' && 
-       github.event.pull_request.draft == true && 
-       github.event.pull_request.base.ref == 'main') ||
-      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # プルリクエストにコメントを投稿するための権限設定
     permissions:
       issues: write
       pull-requests: write
     steps:
+      # GitHub Scriptを使ってプルリクエストにチェックリストコメントを追加
       - name: Add checklist comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // プルリクエスト番号を取得（手動実行時は入力値、自動実行時はイベントから）
-            const prNumber = context.eventName === 'workflow_dispatch' 
-              ? context.payload.inputs.pr_number
-              : context.payload.pull_request.number;
+            // プルリクエストの情報を取得
+            const prNumber = context.payload.pull_request.number;
             const repo = context.repo;
+
+            // レビューチェックリストのテンプレート
             const body = "レビューの効率化および手戻り抑止のために、作成者は以下をセルフチェックしてください\n\n" +
               "### 概要に以下を記載していること\n" +
               "- [ ] 動作確認をどんなパターンで行ったのかが書かれているか\n" +
@@ -43,6 +39,7 @@ jobs:
               "- [ ] テストコードに作成したテストケースをどの観点で作成したのか、その妥当性を説明できるか。異常系のテストケースを作成したか\n" +
               "- [ ] フロントで処理に失敗したときに、その失敗の結果をユーザに通知するような実装になっているか";
 
+            // プルリクエストにコメントを投稿
             await github.rest.issues.createComment({
               owner: repo.owner,
               repo: repo.repo,
